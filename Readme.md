@@ -1,4 +1,4 @@
-## Digit Classification Using MLP (Scikit-learn)
+## HandWritting Digits Classification Using MLP (Scikit-learn)
 
 This script demonstrates a complete, clean, and principled pipeline for:
 
