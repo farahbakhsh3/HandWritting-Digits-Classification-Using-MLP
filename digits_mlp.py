@@ -11,7 +11,6 @@ This script demonstrates a complete, clean, and principled pipeline for:
 The implementation is designed to be educational, reproducible,
 and scientifically defensible.
 """
-from typing import Tuple, NoReturn
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,19 +19,13 @@ from skimage.transform import resize
 from skimage.filters import threshold_otsu
 
 from sklearn import datasets
-from sklearn.utils import Bunch
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import MinMaxScaler
 
 
-def load_and_preprocess_digits() -> Tuple[
-    np.ndarray,
-    np.ndarray,
-    MinMaxScaler,
-    Bunch
-]:
+def load_and_preprocess_digits():
     """
     Load the sklearn digits dataset and preprocess it.
 
@@ -52,23 +45,18 @@ def load_and_preprocess_digits() -> Tuple[
     digits : Bunch
         Original digits dataset object
     """
-    digits: Bunch = datasets.load_digits()
+    digits = datasets.load_digits()
 
-    X: np.ndarray = digits.images.reshape(len(digits.images), -1)
-    y: np.ndarray = digits.target
+    X = digits.images.reshape(len(digits.images), -1)
+    y = digits.target
 
-    scaler: MinMaxScaler = MinMaxScaler(feature_range=(0.0, 1.0))
+    scaler = MinMaxScaler(feature_range=(0.0, 1.0))
     X = scaler.fit_transform(X)
 
     return X, y, scaler, digits
 
 
-def plot_multi(
-    start_index: int,
-    digits: Bunch,
-    nplots: int = 16,
-    grid_size: tuple[int, int] = (4, 4)
-) -> None:
+def plot_multi(start_index, digits, nplots=16, grid_size=(4, 4)):
     """
     Plot multiple digit images from the sklearn digits dataset.
 
@@ -93,13 +81,13 @@ def plot_multi(
     if start_index + nplots > len(digits.images):
         raise IndexError("Requested range exceeds dataset size")
 
-    fig: plt.Figure = plt.figure(figsize=(5, 5))
+    fig = plt.figure(figsize=(5, 5))
 
     for j in range(nplots):
         ax = fig.add_subplot(grid_size[0], grid_size[1], j + 1)
 
-        image: np.ndarray = digits.images[start_index + j]
-        label: int = int(digits.target[start_index + j])
+        image = digits.images[start_index + j]
+        label = int(digits.target[start_index + j])
 
         ax.imshow(image, cmap="binary")
         ax.set_title(str(label))
@@ -109,7 +97,7 @@ def plot_multi(
     plt.show()
 
 
-def build_mlp_model() -> MLPClassifier:
+def build_mlp_model():
     """
     Build and configure the MLP classifier.
 
@@ -124,13 +112,13 @@ def build_mlp_model() -> MLPClassifier:
     model : MLPClassifier
         Configured but untrained MLP model
     """
-    model: MLPClassifier = MLPClassifier(
+    model = MLPClassifier(
         hidden_layer_sizes=(128, 64),
         activation='relu',
         solver='adam',
         alpha=1e-4,
         learning_rate_init=0.001,
-        max_iter=300,
+        max_iter=1000,
         early_stopping=True,
         n_iter_no_change=15,
         random_state=42,
@@ -139,7 +127,7 @@ def build_mlp_model() -> MLPClassifier:
     return model
 
 
-def plot_training_loss(model: MLPClassifier) -> None:
+def plot_training_loss(model):
     """
     Plot the training loss curve of the MLP.
 
@@ -157,12 +145,7 @@ def plot_training_loss(model: MLPClassifier) -> None:
     plt.show()
 
 
-def evaluate_model(
-    model: MLPClassifier,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
-    digits: Bunch
-) -> None:
+def evaluate_model(model, X_test, y_test, digits):
     """
     Evaluate the trained model on the test set.
 
@@ -181,25 +164,19 @@ def evaluate_model(
     digits : Bunch
         Digits dataset (for label names)
     """
-    y_pred: np.ndarray = model.predict(X_test)
-    accuracy: float = accuracy_score(y_test, y_pred)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
 
     print(f"Test Accuracy: {accuracy:.4f}")
 
-    cm: np.ndarray = confusion_matrix(y_test, y_pred)
-    disp: ConfusionMatrixDisplay = ConfusionMatrixDisplay(
-        cm,
-        display_labels=digits.target_names
-    )
+    cm = confusion_matrix(y_test, y_pred)
+    disp = ConfusionMatrixDisplay(cm, display_labels=digits.target_names)
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix")
     plt.show()
 
 
-def preprocess_external_image(
-    image_path: str,
-    scaler: MinMaxScaler
-) -> np.ndarray:
+def preprocess_external_image(image_path, scaler):
     """
     Preprocess an external image for digit prediction.
 
@@ -221,10 +198,10 @@ def preprocess_external_image(
     img_flat : np.ndarray
         Preprocessed image of shape (1, 64)
     """
-    img: np.ndarray = imread(image_path, as_gray=True)
+    img = imread(image_path, as_gray=True)
     img = resize(img, (8, 8), anti_aliasing=True)
 
-    thresh: float = threshold_otsu(img)
+    thresh = threshold_otsu(img)
     img = img < thresh
 
     img = img.astype(float).reshape(1, -1)
@@ -233,12 +210,7 @@ def preprocess_external_image(
     return img
 
 
-def show_test_sample_with_prediction(
-    model: MLPClassifier,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
-    index: int
-) -> None:
+def show_test_sample_with_prediction(model, X_test, y_test, index):
     """
     Display a test image along with its true label and predicted label.
 
@@ -253,16 +225,15 @@ def show_test_sample_with_prediction(
     index : int
         Index of the test sample to visualize
     """
-
     if X_test.ndim != 2 or X_test.shape[1] != 64:
         raise ValueError("X_test must have shape (n_samples, 64)")
 
     if not (0 <= index < len(X_test)):
         raise IndexError("Index out of range for X_test")
 
-    image: np.ndarray = X_test[index].reshape(8, 8)
-    true_label: int = int(y_test[index])
-    predicted_label: int = int(model.predict(X_test[index].reshape(1, -1))[0])
+    image = X_test[index].reshape(8, 8)
+    true_label = int(y_test[index])
+    predicted_label = int(model.predict(X_test[index].reshape(1, -1))[0])
 
     plt.figure(figsize=(3, 3))
     plt.imshow(image, cmap="binary")
@@ -272,11 +243,7 @@ def show_test_sample_with_prediction(
     plt.show()
 
 
-def show_external_image_prediction(
-    model: MLPClassifier,
-    image_path: str,
-    scaler: MinMaxScaler
-) -> None:
+def show_external_image_prediction(model, image_path, scaler):
     """
     Display an external digit image along with the model's predicted label.
 
@@ -290,19 +257,19 @@ def show_external_image_prediction(
         Fitted scaler used during training
     """
     # Load image
-    img: np.ndarray = imread(image_path, as_gray=True)
-    img_resized: np.ndarray= resize(img, (8, 8), anti_aliasing=True)
+    img = imread(image_path, as_gray=True)
+    img_resized = resize(img, (8, 8), anti_aliasing=True)
 
     # Otsu threshold for binarization
-    threshold: float = threshold_otsu(img_resized)
-    img_binary: np.ndarray = img_resized < threshold
+    threshold = threshold_otsu(img_resized)
+    img_binary = img_resized < threshold
 
     # Flatten and scale
-    img_flat: np.ndarray = img_binary.astype(float).reshape(1, -1)
-    img_scaled: np.ndarray = scaler.transform(img_flat)
+    img_flat = img_binary.astype(float).reshape(1, -1)
+    img_scaled = scaler.transform(img_flat)
 
     # Predict
-    prediction: int = int(model.predict(img_scaled)[0])
+    prediction = int(model.predict(img_scaled)[0])
 
     # Plot
     plt.figure(figsize=(3, 3))
@@ -313,33 +280,26 @@ def show_external_image_prediction(
     plt.show()
 
 
-def show_wrong_predicts(
-    model: MLPClassifier,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
-    n_rows: int = 2,
-    n_cols: int = 3
-) -> None:
+def show_wrong_predicts(model, X_test, y_test, n_rows=2, n_cols=3):
     """
     Display a grid of test samples where the model predicted incorrectly.
     """
-    y_pred: np.ndarray = model.predict(X_test)
-    wrong_indices: np.ndarray = np.where(y_pred != y_test)[0]
+    y_pred = model.predict(X_test)
+    wrong_indices = np.where(y_pred != y_test)[0]
 
-    n_to_show: int = min(len(wrong_indices), n_rows * n_cols)
+    n_to_show = min(len(wrong_indices), n_rows * n_cols)
     if n_to_show == 0:
         print("No misclassified samples to show.")
         return
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols, n_rows))
-    fig: plt.Figure
-    axes: np.ndarray = np.array(axes).flatten()
-    
+    axes = np.array(axes).flatten()
+
     for i in range(n_to_show):
-        idx: int = int(wrong_indices[i])
-        img: np.ndarray = X_test[idx].reshape(8, 8)
-        true_label: int = int(y_test[idx])
-        predicted_label: int = int(y_pred[idx])
+        idx = int(wrong_indices[i])
+        img = X_test[idx].reshape(8, 8)
+        true_label = int(y_test[idx])
+        predicted_label = int(y_pred[idx])
 
         ax = axes[i]
         ax.imshow(img, cmap="binary")
@@ -363,18 +323,7 @@ def main():
     - Predict digit from external image
     - Show wrong predictions
     """
-    X: np.ndarray
-    y: np.ndarray
-    scaler: MinMaxScaler
-    digits: Bunch
-
     X, y, scaler, digits = load_and_preprocess_digits()
-
-    X_train: np.ndarray
-    X_test: np.ndarray
-    y_train: np.ndarray
-    y_test: np.ndarray
-
     plot_multi(0, digits=digits)
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -384,7 +333,7 @@ def main():
         stratify=y
     )
 
-    model: MLPClassifier = build_mlp_model()
+    model = build_mlp_model()
     model.fit(X_train, y_train)
 
     plot_training_loss(model)
@@ -392,11 +341,11 @@ def main():
 
     # Example external image prediction
     # Ensure the image contains a centered handwritten digit
-    image_path: str = "2.jpg"
+    image_path = "2.jpg"
     try:
         show_external_image_prediction(model, image_path, scaler)
-        img: np.ndarray = preprocess_external_image(image_path, scaler)
-        prediction: np.ndarray = model.predict(img)
+        img = preprocess_external_image(image_path, scaler)
+        prediction = model.predict(img)
         print(f"Predicted digit for external image: {int(prediction[0])}")
     except FileNotFoundError:
         print("External image not found. Skipping external prediction.")
